@@ -16,6 +16,10 @@ class BaseModel(models.Model):
     archived = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
+    @property
+    def created_on_arrow(self):
+        return arrow.get(self.created_at).humanize()
+
     class Meta:
         abstract = True
 
@@ -31,10 +35,10 @@ class Workflow(BaseModel):
         verbose_name_plural = _("Workflows")
         ordering = ('id',)
 
-    def __unicode__(self):
+    def __unicode__(self) -> str:
         return smart_unicode(self.name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -49,25 +53,26 @@ class WorkflowSteps(BaseModel):
         verbose_name_plural = _("WorkflowSteps")
         ordering = ('id',)
 
-    def __unicode__(self):
+    def __unicode__(self) -> str:
+        return smart_unicode(self.name)
+
+    def __str__(self) -> str:
         return self.name
 
-    def __str__(self):
-        return self.name
 
-class Album(models.Model):
-    album_name = models.CharField(max_length=100)
-    artist = models.CharField(max_length=100)
-
-class Track(models.Model):
-    album = models.ForeignKey(Album, related_name='tracks', on_delete=models.CASCADE)
-    order = models.IntegerField()
-    title = models.CharField(max_length=100)
-    duration = models.IntegerField()
+class Comment(BaseModel):
+    id = models.AutoField(primary_key=True)
+    workflow_id = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='comments')
+    name = models.CharField(blank=False, null=False, max_length=150)
+    text = models.TextField(blank=False, null=False, max_length=350)
 
     class Meta:
-        unique_together = ['album', 'order']
-        ordering = ['order']
+        verbose_name = _("Comment")
+        verbose_name_plural = _("Comments")
+        ordering = ('id',)
 
-    def __str__(self):
-        return '%d: %s' % (self.order, self.title)
+    def __unicode__(self) -> str:
+        return smart_unicode(self.name)
+
+    def __str__(self) -> str:
+        return self.name

@@ -25,12 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'rest_framework.authtoken',
-    'rest_auth',
-    'django.contrib.sites',
-    'allauth',
-    'allauth.account',
-    'rest_auth.registration',
+
     'api',
 ]
 
@@ -114,5 +109,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'api.utils.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'api.utils.custom_exception_handler',
 }
