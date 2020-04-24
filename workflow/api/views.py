@@ -1,106 +1,67 @@
-from typing import List
 from urllib.request import Request
 
 from django.http import Http404
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import GenericAPIView
 
 from .models import Workflow, Comment
-from .pagination import CustomPagination
-from .serializers import WorkflowSerializer, CommentSerializer
+from api.utils.pagination import CustomPagination
+from .serializers.serializers import WorkflowSerializer, CommentSerializer
 
 
-class WorkflowGetDeleteUpdate(RetrieveUpdateDestroyAPIView):
-    """
-    To perform Retrieve, Update and Destroy an instance of Workflow Model.
-    """
-    serializer_class = WorkflowSerializer
-
-    def get_queryset(self, pk: int) -> Workflow:
-        """
-        Create queryset of item Workflow Model by primary key.
-        :param pk: Primary key value of Workflow Model that we want get item.
-        :return: An instance of Workflow Model.
-        """
-        try:
-            workflow = Workflow.objects.get(pk=pk)
-        except Workflow.DoesNotExist:
-            raise Http404()
-        return workflow
-
-    def get(self, request: Request, pk: int) -> Response:
-        """
-        Get a workflow by id.
-        :param pk: Primary key value of workflow Model that we want to retrieve.
-        :return: Serialized workflow instance after retrieved.
-        """
-        workflow = self.get_queryset(pk)
-        if isinstance(workflow, Workflow):
-            serializer = WorkflowSerializer(workflow)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request: Request, pk: int) -> Response:
-        """
-        Update a workflow object.
-        :param pk: Primary key value of workflow Model that we want to update.
-        :return: Serialized instance after updated item values.
-        """
-        workflow = self.get_queryset(pk)
-
-        serializer = WorkflowSerializer(workflow, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request: Request, pk: int) -> Response("", status.HTTP_204_NO_CONTENT):
-        """
-        Delete a workflow.
-        :param pk: Primary key value of workflow Model that we want to delete.
-        :return: Response as String to show item deleted.
-        """
-        workflow = self.get_queryset(pk)
-
-        workflow.delete()
-        content = {
-            'status': 'NO CONTENT'
-        }
-        return Response(content, status=status.HTTP_204_NO_CONTENT)
-
-
-class WorkflowListPost(ListCreateAPIView):
+class WorkflowListPost(GenericAPIView):
     """
     To perform List and Create actions on Workflow Model.
+
+    Methods
+    -------
+    get
+        Return a list of all created Workflow.
+    post
+        Create a Workflow instance.
     """
+
     serializer_class = WorkflowSerializer
     pagination_class = CustomPagination
+    queryset = Workflow.objects.all()
 
-    def get_queryset(self) -> List[Workflow]:
+    def get(self, request: Request, format=None) -> Response:
         """
-        Create queryset of item Workflow Model.
-        :return: An instance of List of workflows.
+        List all created workflows.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Returns
+        -------
+        Response
+            Return the response with all serialized workflows
         """
         workflows = Workflow.objects.all()
-        return workflows
-
-    def get(self, request: Request) -> Response:
-        """
-        Get all workflows.
-        :return: Serialized instance of all workflows.
-        """
-        workflows = self.get_queryset()
         paginate_queryset = self.paginate_queryset(workflows)
         serializer = self.serializer_class(paginate_queryset, many=True)
-        print(serializer.data)
         return self.get_paginated_response(serializer.data)
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request, format=None) -> Response:
         """
-        Create a new workflow
-        :return: An instance of Workflow Model.
+        Create a workflow instance.
+        
+        Parameters
+        ----------
+        request : Request
+            HTTP POST request
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Returns
+        -------
+        Response
+            Return the response with the created serialized workflow
         """
+
         serializer = WorkflowSerializer(data=request.data)
         print(serializer)
         if serializer.is_valid():
@@ -109,36 +70,183 @@ class WorkflowListPost(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CommentListPost(ListCreateAPIView):
+class WorkflowGetDeleteUpdate(GenericAPIView):
+    """
+    To perform Retrieve, Update or delete an instance of Workflow Model.
+
+    Methods
+    -------
+    get
+        Return a serialized Workflow.
+    put
+        Update a workflow instance.
+    delete
+        Delete a workflow instance.
+    Raises
+    ------
+    Http404
+        HTTP error if the Workflow doesn't exist
+    """
+
+    serializer_class = WorkflowSerializer
+    queryset = Workflow.objects.all()
+
+    def get_object(self, pk: int) -> Workflow:
+        """
+        Get the Workflow object.
+        Parameters
+        ----------
+        pk: integer
+            Identifier of the Workflow
+        Raises
+        ------
+        Http404
+            Return HTTP 404 error code if the object doesn't exist
+        Returns
+        -------
+        dict
+            Dictionary of the query result
+        """
+        try:
+            return Workflow.objects.get(pk=pk)
+        except Workflow.DoesNotExist:
+            raise Http404
+
+    def get(self, request: Request, pk: int, format=None) -> Response:
+        """
+        Obtain a workflow instance.
+        Parameters
+        ----------
+        request: Request
+            HTTP GET request
+        id: str
+            Identifier of the Workflow
+        format: str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the serialized workflow
+        """
+
+        workflow = self.get_object(pk)
+        if isinstance(workflow, Workflow):
+            serializer = WorkflowSerializer(workflow)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request: Request, pk: int, format=None) -> Response:
+        """
+        Update a workflow instance.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        id : str
+            Identifier of the Workflow
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the serialized workflow
+        """
+        workflow = self.get_object(pk)
+
+        serializer = WorkflowSerializer(workflow, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request: Request, pk: int, format=None) -> Response("", status.HTTP_204_NO_CONTENT):
+        """
+        Delete a workflow instance.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        pk : str
+            Identifier of the Workflow
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the result code of the deletion
+        """
+        workflow = self.get_object(pk)
+        if workflow is not None:
+            workflow.delete()
+            content = {
+                'status': 'NO CONTENT'
+            }
+            return Response(content, status=status.HTTP_204_NO_CONTENT)
+        raise Http404
+
+
+class CommentListPost(GenericAPIView):
     """
     To perform List and Create actions on Comment Model.
+
+    Methods
+    -------
+    get
+        Return a list of all created Comment.
+    post
+        Create a Comment instance.
     """
     serializer_class = CommentSerializer
     pagination_class = CustomPagination
-    permission_classes = (IsAuthenticated,)
+    queryset = Comment.objects.all()
 
-    def get_queryset(self) -> List[Comment]:
+    def get(self, request: Request, format=None) -> Response:
         """
-        Create queryset of item Comment Model.
-        :return: An instance of List of Comments.
+        List all created comments.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Returns
+        -------
+        Response
+            Return the response with all serialized comments
         """
         comments = Comment.objects.all()
-        return comments
-
-    def get(self, request: Request) -> Response:
-        """
-        Get all comments.
-        :return: Serialized instance of all comments.
-        """
-        comments = self.get_queryset()
         paginate_queryset = self.paginate_queryset(comments)
         serializer = self.serializer_class(paginate_queryset, many=True)
         return self.get_paginated_response(serializer.data)
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request, format=None) -> Response:
         """
-        Create a new comment.
-        :return: An instance of Comment Model.
+        Create a comment instance.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP POST request
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Returns
+        -------
+        Response
+            Return the response with the created serialized comment
         """
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
@@ -147,42 +255,94 @@ class CommentListPost(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CommentGetDeleteUpdate(RetrieveUpdateDestroyAPIView):
+class CommentGetDeleteUpdate(GenericAPIView):
     """
-    To perform Retrieve, Update and Destroy an instance of Comment Model.
+    To perform Retrieve, Update or delete an instance of Comment Model.
+
+    Methods
+    -------
+    get
+        Return a serialized comment.
+    put
+        Update a comment instance.
+    delete
+        Delete a comment instance.
+    Raises
+    ------
+    Http404
+        HTTP error if the comment doesn't exist
     """
     serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
 
-    def get_queryset(self, pk: int) -> Comment:
+    def get_object(self, pk: int) -> Comment:
         """
-        Create queryset of item Comment Model by primary key.
-        :param pk: Primary key value of Comment Model that we want get item.
-        :return: An instance of Comment Model.
+        Get the Comment object.
+        Parameters
+        ----------
+        pk: integer
+            Identifier of the Comment
+        Raises
+        ------
+        Http404
+            Return HTTP 404 error code if the object doesn't exist
+        Returns
+        -------
+        dict
+            Dictionary of the query result
         """
         try:
-            comment = Comment.objects.get(pk=pk)
+            return Comment.objects.get(pk=pk)
         except Comment.DoesNotExist:
-            raise Http404()
-        return comment
+            raise Http404
 
-    def get(self, request: Request, pk: int) -> Response:
+    def get(self, request: Request, pk: int, format=None) -> Response:
         """
-        Get a comment by id.
-        :param pk: Primary key value of Comment Model that we want to retrieve.
-        :return: Serialized instance after retrieved.
+        Obtain a comment instance.
+        Parameters
+        ----------
+        request: Request
+            HTTP GET request
+        id: str
+            Identifier of the comment
+        format: str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the serialized comment
         """
-        comment = self.get_queryset(pk)
+        comment = self.get_object(pk)
         if isinstance(comment, Comment):
             serializer = self.serializer_class(comment)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request: Request, pk: int) -> Response:
+    def put(self, request: Request, pk: int, format=None) -> Response:
         """
-        Update a comment object.
-        :param pk: Primary key value of Comment Model that we want to update.
-        :return: Serialized instance after updated item values.
+        Update a comment instance.
+
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        id : str
+            Identifier of the comment
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the serialized comment
         """
-        comment = self.get_queryset(pk)
+        comment = self.get_object(pk)
 
         serializer = self.serializer_class(comment, data=request.data)
         if serializer.is_valid():
@@ -192,14 +352,30 @@ class CommentGetDeleteUpdate(RetrieveUpdateDestroyAPIView):
 
     def delete(self, request: Request, pk: int) -> Response("", status.HTTP_204_NO_CONTENT):
         """
-        Delete a comment.
-        :param pk: Primary key value of Comment Model that we want to delete.
-        :return: Response as String to show item deleted.
-        """
-        comment = self.get_queryset(pk)
+        Delete a comment instance.
 
-        comment.delete()
-        content = {
-            'status': 'NO CONTENT'
-        }
-        return Response(content, status=status.HTTP_204_NO_CONTENT)
+        Parameters
+        ----------
+        request : Request
+            HTTP GET request
+        pk : str
+            Identifier of the comment
+        format : str, optional
+            Format for the rendered response (the default is None)
+        Raises
+        ------
+        PermissionDenied
+            Return HTTP 403 error code if the user is denied
+        Returns
+        -------
+        Response
+            Return the response with the result code of the deletion
+        """
+        comment = self.get_object(pk)
+        if comment is not None:
+            comment.delete()
+            content = {
+                'status': 'NO CONTENT'
+            }
+            return Response(content, status=status.HTTP_204_NO_CONTENT)
+        raise Http404

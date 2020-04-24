@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.schemas import get_schema_view
 
 from . import views
 

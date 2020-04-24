@@ -1,6 +1,7 @@
 from django.http import Http404
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from api.models import Workflow, WorkflowSteps, Comment
 
@@ -24,6 +25,9 @@ class WorkflowSerializer(serializers.ModelSerializer):
     steps = WorkflowStepSerializer(many=True)
 
     class Meta:
+        error_status_codes = {
+            HTTP_400_BAD_REQUEST: 'Bad Request'
+        }
         model = Workflow
         fields = ['name', 'description', 'steps']
 
