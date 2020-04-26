@@ -1,6 +1,6 @@
 # Oculavis - Tech Check
 
-This application uploaded on [Github](https://github.com/hasansajedi/workflow) and test automated with CircleCI.
+This application uploaded on [Github](https://github.com/hasansajedi/workflow).
 
 All of options you want in tech document is implemented. 
 
