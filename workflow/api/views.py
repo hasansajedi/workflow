@@ -7,7 +7,8 @@ from rest_framework.generics import GenericAPIView
 
 from .models import Workflow, Comment
 from api.utils.pagination import CustomPagination
-from .serializers.serializers import WorkflowSerializer, CommentSerializer
+from .serializers.serializers import WorkflowSerializer, CommentSerializer, WorkflowItemSerializer, \
+    CommentListSerializer, WorkflowListSerializer
 
 
 class WorkflowListPost(GenericAPIView):
@@ -43,7 +44,7 @@ class WorkflowListPost(GenericAPIView):
         """
         workflows = Workflow.objects.all()
         paginate_queryset = self.paginate_queryset(workflows)
-        serializer = self.serializer_class(paginate_queryset, many=True)
+        serializer = WorkflowListSerializer(paginate_queryset, many=True)
         return self.get_paginated_response(serializer.data)
 
     def post(self, request: Request, format=None) -> Response:
@@ -63,7 +64,6 @@ class WorkflowListPost(GenericAPIView):
         """
 
         serializer = WorkflowSerializer(data=request.data)
-        print(serializer)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -135,7 +135,7 @@ class WorkflowGetDeleteUpdate(GenericAPIView):
 
         workflow = self.get_object(pk)
         if isinstance(workflow, Workflow):
-            serializer = WorkflowSerializer(workflow)
+            serializer = WorkflowItemSerializer(workflow)
             return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request: Request, pk: int, format=None) -> Response:
@@ -230,7 +230,7 @@ class CommentListPost(GenericAPIView):
         """
         comments = Comment.objects.all()
         paginate_queryset = self.paginate_queryset(comments)
-        serializer = self.serializer_class(paginate_queryset, many=True)
+        serializer = CommentListSerializer(paginate_queryset, many=True)
         return self.get_paginated_response(serializer.data)
 
     def post(self, request: Request, format=None) -> Response:

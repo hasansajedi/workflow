@@ -108,10 +108,21 @@ class Workflow(BaseModel):
 
 
 class WorkflowSteps(BaseModel):
+    DEFINITION = 0
+    ACTIVE = 1
+    RETIRED = 2
+
+    STATUS_CHOICE_LIST = (
+        (DEFINITION, _('In definition')),
+        (ACTIVE, _('Active')),
+        (RETIRED, _('Retired')),
+    )
+
     id = models.AutoField(primary_key=True)
     workflow_id = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='steps')
     name = models.CharField(blank=False, null=False, max_length=150)
     description = models.TextField(blank=False, null=False, max_length=350)
+    status = models.IntegerField(_('Status'), choices=STATUS_CHOICE_LIST, default=DEFINITION)
 
     class Meta:
         verbose_name = _("WorkflowStep")
@@ -123,6 +134,9 @@ class WorkflowSteps(BaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+    def get_status_display(self, status_code) -> str:
+        return self.STATUS_CHOICE_LIST[status_code]
 
 
 class Comment(BaseModel):

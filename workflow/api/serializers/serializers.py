@@ -9,13 +9,17 @@ from api.models import Workflow, WorkflowSteps, Comment
 # https://www.django-rest-framework.org/api-guide/relations/#nested-relationships
 class WorkflowStepSerializer(serializers.ModelSerializer):
     """
-
+    Create WorkflowStep model serializer to control fields.
     """
     id = serializers.IntegerField(required=False)
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkflowSteps
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'description', 'status')
+
+    def get_status(self, instance):
+        return WorkflowSteps.STATUS_CHOICE_LIST[instance.status][1]
 
 
 class WorkflowSerializer(serializers.ModelSerializer):
@@ -109,3 +113,51 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    """
+    Create Comment model serializer to control fields, add new item and update item.
+    """
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'name', 'text', 'created_at', 'workflow_id')
+
+
+class CommentItemSerializer(serializers.ModelSerializer):
+    """
+    Create Comment model serializer to control fields, add new item and update item.
+    """
+
+    class Meta:
+        model = Comment
+        fields = ('name', 'text', 'created_at')
+
+
+class WorkflowItemSerializer(serializers.ModelSerializer):
+    """
+    Create Workflow model serializer to control fields, add new item and update item.
+    """
+    steps = WorkflowStepSerializer(many=True)
+    comments = CommentItemSerializer(many=True)
+
+    class Meta:
+        error_status_codes = {
+            HTTP_400_BAD_REQUEST: 'Bad Request'
+        }
+        model = Workflow
+        fields = ['name', 'description', 'steps', 'comments']
+
+
+class WorkflowListSerializer(serializers.ModelSerializer):
+    """
+    Create Workflow model serializer to control fields.
+    """
+
+    class Meta:
+        error_status_codes = {
+            HTTP_400_BAD_REQUEST: 'Bad Request'
+        }
+        model = Workflow
+        fields = ['id', 'name', 'description', 'created_at']

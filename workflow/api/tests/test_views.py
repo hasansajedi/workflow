@@ -1,88 +1,141 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
-from .factories import WorkflowFactory
+from ..models import Workflow, Comment
 
 
 class WorkflowViewSetTestCase(TestCase):
     def setUp(self):
-        self.list_url = reverse('api:WorkflowListPost')
+        # Initialize client
+        self.client = APIClient()
 
-    def test_get_list(self):
-        """GET the list page of workflows."""
-        workflows = [WorkflowFactory() for i in range(0, 3)]
+        self.data = {
+            "name": "test workflow",
+            "description": "description for test workflow",
+            "steps": [
+                {
+                    'name': 'step1',
+                    'description': 'description for step1',
+                },
+                {
+                    'name': 'step2',
+                    'description': 'description for step2',
+                }
+            ]
+        }
+        self.response = self.client.post(
+            reverse('api:WorkflowListPost'),
+            self.data,
+            format="json")
 
-        response = self.client.get(self.list_url)
+    def test_api_can_post_a_workflow(self):
+        """
+        Test the api has workflow creation capability.
+        """
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_can_get_a_workflow(self):
+        """
+        Test the api can get a given workflow.
+        """
+        workflow = Workflow.objects.get(id=1)
+        response = self.client.get(
+            reverse('api:WorkflowGetDeleteUpdate',
+                    kwargs={'pk': workflow.id}), format='json')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            set(workflow['name'] for workflow in response.data['results']),
-            set(workflow.name for workflow in workflows)
-        )
+        self.assertContains(response, workflow)
 
-    # def test_get_detail(self):
-    #     """GET a detail page for a Company."""
-    #     company = CompanyFactory()
-    #     response = self.client.get(self.get_detail_url(company.id))
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data['name'], company.name)
-    #
-    # def test_post(self):
-    #     """POST to create a Company."""
-    #     data = {
-    #         'name': 'New name',
-    #         'description': 'New description',
-    #         'street_line_1': 'New street_line_1',
-    #         'city': 'New City',
-    #         'state': 'NY',
-    #         'zipcode': '12345',
-    #     }
-    #     self.assertEqual(Company.objects.count(), 0)
-    #     response = self.client.post(self.list_url, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(Company.objects.count(), 1)
-    #     company = Company.objects.all().first()
-    #     for field_name in data.keys():
-    #           self.assertEqual(getattr(company, field_name), data[field_name])
-    #
-    # def test_put(self):
-    #     """PUT to update a Company."""
-    #     company = CompanyFactory()
-    #     data = {
-    #         'name': 'New name',
-    #         'description': 'New description',
-    #         'street_line_1': 'New street_line_1',
-    #         'city': 'New City',
-    #         'state': 'NY',
-    #         'zipcode': '12345',
-    #     }
-    #     response = self.client.put(
-    #         self.get_detail_url(company.id),
-    #         data=data
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #
-    #     # The object has really been updated
-    #     company.refresh_from_db()
-    #     for field_name in data.keys():
-    #         self.assertEqual(getattr(company, field_name), data[field_name])
-    #
-    # def test_patch(self):
-    #     """PATCH to update a Company."""
-    #     company = CompanyFactory()
-    #     data = {'name': 'New name'}
-    #     response = self.client.patch(
-    #         self.get_detail_url(company.id),
-    #         data=data
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #
-    #     # The object has really been updated
-    #     company.refresh_from_db()
-    #     self.assertEqual(company.name, data['name'])
-    #
-    # def test_delete(self):
-    #     """DELETEing is not implemented."""
-    #     company = CompanyFactory()
-    #     response = self.client.delete(self.get_detail_url(company.id))
-    #     self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    def test_api_can_update_workflow(self):
+        """
+        Test the api can update a given Workflow.
+        """
+        workflow = Workflow.objects.get(id=1)
+        change_workflow = {"name": "A new workflow",
+                           "description": "description for test workflow",
+                           "steps": [
+                               {
+                                   'id': 1,
+                                   'name': 'step1',
+                                   'description': 'description for step1',
+                               },
+                               {
+                                   'id': 2,
+                                   'name': 'step2',
+                                   'description': 'description for step2',
+                               }
+                           ]
+                           }
+        response = self.client.put(
+            reverse('api:WorkflowGetDeleteUpdate', kwargs={'pk': workflow.id}),
+            change_workflow, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_delete(self):
+        """
+        Test the api can delete a workflow.
+        """
+        workflow = Workflow.objects.get(id=1)
+        response = self.client.delete(
+            reverse('api:WorkflowGetDeleteUpdate', kwargs={'pk': workflow.id}),
+            format='json', follow=True)
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class CommentViewSetTestCase(TestCase):
+    def setUp(self):
+        # Initialize client to call url
+        self.client = APIClient()
+        self.workflow = Workflow.objects.create(name="name", description="test description")
+
+        self.data = {
+            "workflow_id": self.workflow.id,
+            "name": "test comment",
+            "text": "comment text goes here"
+        }
+        self.response = self.client.post(reverse('api:CommentListPost'), self.data, format="json")
+
+    def test_api_can_post_a_comment(self):
+        """
+        Test the api has comment creation capability.
+        """
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_can_get_a_comment(self):
+        """
+        Test the api can get a given comment.
+        """
+        comment = Comment.objects.get(id=1)
+        response = self.client.get(reverse('api:CommentGetDeleteUpdate', kwargs={'pk': comment.id}), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, comment)
+
+    def test_api_can_update_a_comment(self):
+        """
+        Test the api can update a given comment.
+        """
+        change_comment = {
+            "workflow_id": 1,
+            "name": "updated comment",
+            "text": "updated comment text"
+        }
+        comment = Comment.objects.get(id=1)
+        response = self.client.put(
+            reverse('api:CommentGetDeleteUpdate', kwargs={'pk': comment.id}), change_comment, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_can_delete_a_comment(self):
+        """
+        Test the api can delete a comment.
+        """
+        comment = Comment.objects.get(id=1)
+        response = self.client.delete(
+            reverse('api:CommentGetDeleteUpdate', kwargs={'pk': comment.id}), format='json', follow=True)
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
