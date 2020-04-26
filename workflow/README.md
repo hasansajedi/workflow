@@ -38,8 +38,15 @@ or, You can use CircleCI to build, test and deploy the project. The config file 
 
 ## Usage
 
-Main url is:
-> http://127.0.0.1:8000/api
+> To access api, http://127.0.0.1:8000/api .
+> 
+> To access swagger schema ui, http://127.0.0.1:8000/swagger .
+> 
+> To access OpenAPI schema as a json, http://127.0.0.1:8000/swagger.json or http://127.0.0.1:8000/redoc/?format=openapi.
+> 
+> To access OpenAPI schema as a yaml, http://127.0.0.1:8000/swagger.yaml .
+> 
+> To access redoc schema, http://127.0.0.1:8000/redoc .
 
 ##### You can access to all operations about Workflow, by below link:
 * Get all workflows as json: 
