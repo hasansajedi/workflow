@@ -1,6 +1,5 @@
 from django.http import Http404
 from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from api.models import Workflow, WorkflowSteps, Comment
@@ -20,6 +19,62 @@ class WorkflowStepSerializer(serializers.ModelSerializer):
 
     def get_status(self, instance):
         return WorkflowSteps.STATUS_CHOICE_LIST[instance.status][1]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """
+    Create Comment model serializer to control fields, add new item and update item.
+    """
+    workflow_id = serializers.IntegerField(source='workflow_id.id', required=True)
+
+    class Meta:
+        model = Comment
+        fields = ('workflow_id', 'name', 'text')
+
+    def create(self, validated_data: dict) -> Comment:
+        """
+        :param validated_data: Dict type
+        :return: Create an instance of Comment Model.
+        """
+        workflow_id = validated_data.pop('workflow_id')
+        name = validated_data.pop('name')
+        text = validated_data.pop('text')
+        workflow = Workflow.objects.get(id=workflow_id.get("id"))
+        comment = Comment.objects.create(workflow_id=workflow, name=name, text=text)
+
+        return comment
+
+    def update(self, instance: Comment, validated_data: dict) -> Comment:
+        """
+        :param instance: An instance of Comment that we want to update fields values.
+        :param validated_data: Dict type
+        :return: An instance of Comment Model.
+        """
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+
+        return instance
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    """
+    Create Comment model serializer to control fields, add new item and update item.
+    """
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'name', 'text', 'created_at', 'workflow_id')
+
+
+class CommentItemSerializer(serializers.ModelSerializer):
+    """
+    Create Comment model serializer to control fields, add new item and update item.
+    """
+
+    class Meta:
+        model = Comment
+        fields = ('name', 'text', 'created_at')
 
 
 class WorkflowSerializer(serializers.ModelSerializer):
@@ -77,62 +132,6 @@ class WorkflowSerializer(serializers.ModelSerializer):
                     WorkflowSteps.objects.create(workflow_id=instance, **item)
 
         return instance
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    """
-    Create Comment model serializer to control fields, add new item and update item.
-    """
-    workflow_id = serializers.IntegerField(source='workflow_id.id', required=True)
-
-    class Meta:
-        model = Comment
-        fields = ('workflow_id', 'name', 'text')
-
-    def create(self, validated_data: dict) -> Comment:
-        """
-        :param validated_data: Dict type
-        :return: Create an instance of Comment Model.
-        """
-        workflow_id = validated_data.pop('workflow_id')
-        name = validated_data.pop('name')
-        text = validated_data.pop('text')
-        workflow = Workflow.objects.get(id=workflow_id.get("id"))
-        comment = Comment.objects.create(workflow_id=workflow, name=name, text=text)
-
-        return comment
-
-    def update(self, instance: Comment, validated_data: dict) -> Comment:
-        """
-        :param instance: An instance of Comment that we want to update fields values.
-        :param validated_data: Dict type
-        :return: An instance of Comment Model.
-        """
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.save()
-
-        return instance
-
-
-class CommentListSerializer(serializers.ModelSerializer):
-    """
-    Create Comment model serializer to control fields, add new item and update item.
-    """
-
-    class Meta:
-        model = Comment
-        fields = ('id', 'name', 'text', 'created_at', 'workflow_id')
-
-
-class CommentItemSerializer(serializers.ModelSerializer):
-    """
-    Create Comment model serializer to control fields, add new item and update item.
-    """
-
-    class Meta:
-        model = Comment
-        fields = ('name', 'text', 'created_at')
 
 
 class WorkflowItemSerializer(serializers.ModelSerializer):
