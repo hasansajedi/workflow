@@ -112,3 +112,18 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'api.utils.utils.custom_exception_handler',
 }
+
+SESSION_COOKIE_SECURE = True  # to avoid transmitting the session cookie over HTTP accidentally.
+CSRF_COOKIE_SECURE = True  # to avoid transmitting the CSRF cookie over HTTP accidentally.
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 60
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# SECURE_SSL_REDIRECT = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+# SECURE_HSTS_PRELOAD=True
+# Sent referrrer only for same origin links
+# SECURE_REFERRER_POLICY = "same-origin"

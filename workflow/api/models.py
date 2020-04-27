@@ -108,6 +108,22 @@ class Workflow(BaseModel):
 
 
 class WorkflowSteps(BaseModel):
+    """
+    Model the workflowstep interface
+
+    Parameters
+    ----------
+        id: integer,
+            An unique identifier for the workflowstep
+        workflow_id: integer,
+            Refers to an instance of workflow.
+        name: string,
+            Name for the workflowstep,
+        description: string,
+            Description for the workflowstep,
+        status: char,
+            Status of our step.
+    """
     DEFINITION = 0
     ACTIVE = 1
     RETIRED = 2
@@ -130,9 +146,19 @@ class WorkflowSteps(BaseModel):
         ordering = ('id',)
 
     def __unicode__(self) -> str:
+        """
+        Return a human readable representation of the model instance.
+        Returns:
+            string: The name of workflow
+        """
         return smart_unicode(self.name)
 
     def __str__(self) -> str:
+        """
+        Return a human readable representation of the model instance.
+        Returns:
+            string: The name of workflow
+        """
         return self.name
 
     def get_status_display(self, status_code) -> str:
@@ -140,6 +166,20 @@ class WorkflowSteps(BaseModel):
 
 
 class Comment(BaseModel):
+    """
+    Model the comment interface
+
+    Parameters
+    ----------
+        id: integer
+            An unique identifier for the comment
+        workflow_id: integer
+            Refers to an instance of workflow.
+        name: string
+            Name for the comment,
+        text: string
+            Description for the comment
+    """
     id = models.AutoField(primary_key=True)
     workflow_id = models.ForeignKey(Workflow, on_delete=models.CASCADE, related_name='comments')
     name = models.CharField(blank=False, null=False, max_length=150)
@@ -151,7 +191,17 @@ class Comment(BaseModel):
         ordering = ('id',)
 
     def __unicode__(self) -> str:
+        """
+        Return a human readable representation of the model instance.
+        Returns:
+            string: The name of workflow
+        """
         return smart_unicode(self.name)
 
     def __str__(self) -> str:
+        """
+        Return a human readable representation of the model instance.
+        Returns:
+            string: The name of workflow
+        """
         return self.name

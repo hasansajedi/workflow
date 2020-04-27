@@ -228,6 +228,7 @@ class CommentListPost(GenericAPIView):
         Response
             Return the response with all serialized comments
         """
+
         comments = Comment.objects.all()
         paginate_queryset = self.paginate_queryset(comments)
         serializer = CommentListSerializer(paginate_queryset, many=True)
