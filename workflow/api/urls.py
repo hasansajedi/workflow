@@ -5,7 +5,7 @@ from . import views
 app_name = "api"
 
 urlpatterns = [
-    re_path(r'^workflow/(?P<pk>[0-9]+)$',  # Url to get update or delete a comment
+    re_path(r'^workflow/(?P<pk>[0-9]+)$',  # Url to get update or delete a workflow
             views.WorkflowGetDeleteUpdate.as_view(),
             name='WorkflowGetDeleteUpdate'
             ),
