@@ -1,13 +1,11 @@
 from django.urls import path, re_path
-from rest_framework.authtoken.views import obtain_auth_token
-from rest_framework.schemas import get_schema_view
 
 from . import views
 
 app_name = "api"
 
 urlpatterns = [
-    re_path(r'^workflow/(?P<pk>[0-9]+)$',  # Url to get update or delete a movie
+    re_path(r'^workflow/(?P<pk>[0-9]+)$',  # Url to get update or delete a comment
             views.WorkflowGetDeleteUpdate.as_view(),
             name='WorkflowGetDeleteUpdate'
             ),
@@ -19,7 +17,7 @@ urlpatterns = [
          views.CommentListPost.as_view(),
          name='CommentListPost'
          ),
-    re_path(r'^comment/(?P<pk>[0-9]+)$',  # Url to get update or delete a movie
+    re_path(r'^comment/(?P<pk>[0-9]+)$',  # Url to get update or delete a comment
             views.CommentGetDeleteUpdate.as_view(),
             name='CommentGetDeleteUpdate'
             ),
